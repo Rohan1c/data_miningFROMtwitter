@@ -3,6 +3,7 @@ import tweepy
 from dotenv import load_dotenv
 import time
 import datetime
+from collections import Counter
 
 load_dotenv()
 bearer_token = os.getenv("BEARER_TOKEN")
@@ -10,15 +11,27 @@ bearer_token = os.getenv("BEARER_TOKEN")
 if not bearer_token:
     raise Exception("Bearer token not loaded. Check your .env file.")
 
-client = tweepy.Client(bearer_token=bearer_token)   #getting the client using the bearer token
-query = "football -is:retweet lang:en"    #reducing unwanted tweets related the query by changing the lanuage to english
+client = tweepy.Client(bearer_token=bearer_token)
+query = "football -is:retweet lang:en"
+
 
 while True:
     try:
-        tweets = client.search_recent_tweets(query=query, max_results=10)
+        tweets = client.search_recent_tweets(query=query, max_results=10,tweet_fields=["author_id"])
+        user_counter = Counter()
         for tweet in tweets.data:
-            print(tweet.text)
-        break  
+            user_counter[tweet.author_id] += 1
+
+        # Fetch usernames for those user IDs
+        usernames_dict = {}
+        user_ids = list(user_counter.keys())
+        users_response = client.get_users(ids=user_ids)
+
+        for user in users_response.data:
+            usernames_dict[user.username] = user_counter[user.id]
+
+        # Print the dictionary
+        print(usernames_dict)
 
     except tweepy.TooManyRequests as e:
         reset_timestamp = int(e.response.headers.get("x-rate-limit-reset", 0))
