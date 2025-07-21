@@ -6,21 +6,20 @@ import matplotlib.pyplot as plt
 import time
 import datetime
 
-# Load bearer token
-load_dotenv()
+load_dotenv()   # Load bearer token
 bearer_token = os.getenv("BEARER_TOKEN")
 
 if not bearer_token:
     raise Exception("Bearer token not loaded. Check your .env file.")
 
-# Initialize Tweepy client
+# Initializing the client
 client = tweepy.Client(bearer_token=bearer_token)
 
-# Define your search query
+# also intitializing the query
 query = "football -is:retweet lang:en"
 
 try:
-    # Fetch tweets (LIMITED TO 10 TO BE SAFE)
+    # Fetch tweets (LIMITED TO 10 AS WE R USING FREE TRIAL)
     tweets = client.search_recent_tweets(
         query=query,
         max_results=10,
@@ -31,20 +30,20 @@ try:
         print("No tweets found.")
         exit()
 
-    # Count tweets by author ID
+    # Count tweets by user ID
     user_counter = Counter(tweet.author_id for tweet in tweets.data)
 
-    # Fetch user details (usernames)
+    # Fetch user details (like usernames)
     user_ids = list(user_counter.keys())
     users_response = client.get_users(ids=user_ids)
 
     # Map usernames to tweet counts
     usernames_dict = {user.username: user_counter[user.id] for user in users_response.data}
 
-    # Print dictionary
+    # Print the dictionary
     print("Tweet counts by user:", usernames_dict)
 
-    # Plot the graph
+    # Plotting the graph
     usernames = list(usernames_dict.keys())
     tweet_counts = list(usernames_dict.values())
 
